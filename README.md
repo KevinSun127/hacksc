@@ -1,6 +1,6 @@
 # HackSC 2020
 ## Automated Immigration Filings
-For this year's HackSC, I created a Python application that stores client information, retreives case filings from the USCIS, and remotely generates accounts for immigrants seeking green cards. By maximizing the efficiency of legal work, this would alleviate some of the burdens associated with pro-bono legal counsel -- a role that demands incredible quantities of paperwork and information. 
+For this year's HackSC, Anthony and I created a Python application that stores client information, retreives case filings from the USCIS, and remotely generates accounts for immigrants seeking green cards. By maximizing the efficiency of legal work, this would alleviate some of the burdens associated with pro-bono legal counsel -- a role that demands incredible quantities of paperwork and information. 
 
 
 ## Getting Started
