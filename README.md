@@ -6,7 +6,7 @@ For this year's HackSC, Anthony and I created a Python application that stores c
 ## Getting Started
 ### Prerequisites
 You should make sure that Python is installed on your device. 
-Additionally, this project makes heavy use of web drivers and json parsing. This requires several packages which acn be installed via:\n
+Additionally, this project makes heavy use of web drivers and json parsing. This requires several packages which acn be installed via:<br />
 `pip install mechanize selenium requests bs4 random re`
 
 
