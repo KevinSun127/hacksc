@@ -1,16 +1,18 @@
 from appJar import gui
 from brClient import *
 
-check = 0
+#personal information for client
 personal_profiles = {}
 personalInfo = ["lastName", "firstName", "city", "state", "country",
                 "zipCode", "email", "phone", "language"]
 
+#legal information for client (i.e. USCIS form information)
 legal_profiles = {}
 legalInfo = ["lastName1", "firstName1", "A-ID", "receipt_number", "case_status",
             "answer1", "answer2", "answer3", "answer4", "answer5", "answer6",
             "answer7", "answer8", "answer9", "answer10", "answer11", "answer12"]
 
+#questions/answers to survey questions
 questionsAnswers = {"answer3":"In what city were you born?",
                     "answer12":"What is your father’s middle name?",
                     "answer10":"In what city was your first job?",
@@ -24,6 +26,7 @@ questionsAnswers = {"answer3":"In what city were you born?",
                     "answer6":"What year did you get married?",
                     "answer4":"What year did you graduate from high school?"}
 
+#matches widgets with information role
 infoLabel = {"A-ID":"A-ID", "lastName":"Last Name", "lastName1":"Client Last Name",
 "firstName":"First Name",  "firstName1":"Client First Name", "city":"City", "country":"Country", "state":"State",
     "zipCode":"Zip Code", "email":"Email", "phone":"Phone", "language":"Language",
@@ -34,8 +37,10 @@ logins = {}
 
 
 def new_profile(button):
+    #dict stores all info for one immigrant
     immInfo = {}
 
+    #extracts various text fields
     for info in personalInfo:
         if info not in ("zipCode", "phone", "language"):
             immInfo[info] = app.getEntry(info)
@@ -44,25 +49,22 @@ def new_profile(button):
         else:
             immInfo[info] = int(app.getEntry(info))
 
-
+    #adds to the master dictionary
     personal_profiles[immInfo["lastName"] + immInfo["firstName"]] = immInfo
-    print(personal_profiles)
 
+    #adds to the table
     app.openTab("USCIS App", "Contact Information")
     app.addTableRow("g1", list(immInfo.values()))
 
+    #clears out the other textfields
     app.clearAllEntries()
     resetTextBoxes()
-
-
-def deleteEntry():
-    return
-    #write later
 
 
 def create_account(button):
     immInfo = {}
 
+    #we don't have case status yet (haven't accessed account)
     for info in legalInfo:
         if info != "case_status":
             immInfo[info] = app.getEntry(info)
@@ -71,6 +73,7 @@ def create_account(button):
     if immInfo["lastName1"]+immInfo["firstName1"] not in personal_profiles:
         return
 
+    #randomly generates a username-password pair
     immInfo["username"] = randomStringDigits()
     immInfo["password"] = randomStringDigits()
     immInfo["receipt_number"] = [int(app.getEntry("receipt_number"))]
@@ -80,16 +83,19 @@ def create_account(button):
         immInfo[info] =  personal_profiles[immInfo["lastName1"]+ \
                             immInfo["firstName1"]][info]
 
+    #accesses and sets up USCIS account remotely
+    setupUSCIS(immInfo)
 
-    # setupUSCIS(immInfo)
-    # immInfo["case_status"] = updateCases(immInfo)
+    #grabs the updates for the case and stores in dictionary
+    immInfo["case_status"] = updateCases(immInfo)
 
+    #deletes unnecessary personal information for account creation
     for info in personal_profiles[immInfo["lastName1"]+immInfo["firstName1"]]:
         del immInfo[info]
 
     legal_profiles[immInfo["lastName1"]+immInfo["firstName1"]] = immInfo
 
-
+    #updates table
     app.openTab("USCIS App", "Case Status")
     app.addTableRow("g2", list(immInfo.values()))
 
@@ -97,6 +103,7 @@ def create_account(button):
     resetTextBoxes()
 
 
+#resets all fields to default
 def resetTextBoxes():
     app.openTab("USCIS App", "Create New Account")
     for info in legalInfo:
@@ -119,10 +126,28 @@ def resetTextBoxes():
         else:
             app.setEntryDefault(info, infoLabel[info])
 
+    app.openTab("USCIS App", "Delete Profile")
+    app.setEntryDefault("LastName", "Last Name")
+    app.setEntryDefault("FirstName", "First Name")
 
 
-def login(button):
-    app.setTabbedFrameDisableAllTabs("USCIS App", False)
+def deleteProfile(button):
+    name = app.getEntry("LastName")+app.getEntry("FirstName")
+
+    #checks if name is in profile, deletes if so
+    if name in personal_profiles:
+        contact_row = list(personal_profiles.keys()).index(name)
+        del personal_profiles[name]
+        app.openTab("USCIS App", "Contact Information")
+        app.deleteTableRow("g1", contact_row)
+    if name in legal_profiles:
+        legal_row = list(legal_profiles.keys()).index(name)
+        del legal_profiles[name]
+        app.openTab("USCIS App", "Case Status")
+        app.deleteTableRow("g2", legal_row)
+
+    app.clearAllEntries()
+    resetTextBoxes()
 
 
 ####LOGIN PAGE
@@ -144,9 +169,10 @@ with gui("Profile", "1200x600") as app:
 
 ###LOGINPAGE
 
-
+    #new Profile tab
     app.startTab("New Profile")
 
+    #sets up text-fields (different types for different variables)
     for info in personalInfo:
         if info not in ("zipCode", "phone", "language"):
             app.addEntry(info)
@@ -157,22 +183,24 @@ with gui("Profile", "1200x600") as app:
             app.addNumericEntry(info)
             app.setEntryDefault(info, infoLabel[info])
 
+    #adds a submission button
     app.addButton("Enter", new_profile)
     app.stopTab()
 
-
+    #new Contact Info Tab
     app.startTab("Contact Information")
     app.setFont(20)
     app.addTable("g1", [["Last Name", "First Name", "City", "State",
      "Country", "Zip Code", "Email", "Phone", "Language"]])
     app.stopTab()
 
+    #new tab: displays the case filing status
     app.startTab("Case Status")
     app.addTable("g2", [["Last Name", "First Name", "A-ID", "Receipt Number",
     "Case Status"]])
     app.stopTab()
 
-
+    #account creation tab
     app.startTab("Create New Account")
 
     for info in legalInfo:
@@ -189,6 +217,16 @@ with gui("Profile", "1200x600") as app:
 
     app.addButton("Submit", create_account)
     app.stopTab()
+
+    #account deletion tab
+    app.startTab("Delete Profile")
+    app.addEntry("LastName")
+    app.setEntryDefault("LastName", "Last Name")
+    app.addEntry("FirstName")
+    app.setEntryDefault("FirstName", "First Name")
+    app.addButton("Delete", deleteProfile)
+    app.stopTab()
+
 
     app.stopTabbedFrame()
 

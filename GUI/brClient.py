@@ -1,10 +1,7 @@
-import os
-from PyPDF2 import PdfFileReader
 from mechanize import Browser
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
-import time
 import requests
 import json
 import re
@@ -62,7 +59,6 @@ def setupUSCIS(immInfo):
     br.submit()
 
 
-
 def login(username, password):
     br = Browser()
     br.open('https://egov.uscis.gov/casestatus/displayLogon.do')
@@ -73,7 +69,6 @@ def login(username, password):
     return br
 
 
-
 def extractCase(br, receipt_number):
     #follow link + extract the next case's website
     response1 = br.follow_link(text=receipt_number)
@@ -82,23 +77,17 @@ def extractCase(br, receipt_number):
     j = BeautifulSoup(data, features="lxml")
 
     #grab the first two setences of the statement
-    status = re.findall(r'<h1>([A-Za-z\s]*)</h1>\n.*<p>([^.]+)\.([^.]+)',
+    status = re.findall(r'<h1>[A-Za-z\s]*</h1>\n.*<p>([^.]+)\.([^.]+)',
     data, re.MULTILINE)
 
-    #return the abbreviated and 2 sentence case status
-    short = status[0][0]
-    long = status[0][1] + status[0][2]
-    
-    #nvm -- just return long
+    #returns two sentence explanation of case filing
     return long
-
 
 
 def addCase(br, receipt_number):
     br.select_form("caseStatusForm")
     br.form["appReceiptNum"] = receipt_number
     br.submit()
-
 
 
 def updateCases(immInfo):
@@ -111,26 +100,9 @@ def updateCases(immInfo):
     return updates
 
 
-
-
 def randomStringDigits(stringLength=10):
     lettersAndDigits = string.ascii_letters + string.digits
     return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
-
-
-def extractPDFinfo(filename):
-    file = PdfFileReader(filename, strict=False)
-    immInfo = file.getFormTextFields()
-
-    #creates a random user-password generator
-    immInfo["username"] = randomStringDigits()
-    immInfo["password"] = randomStringDigits()
-
-    #two lists of 1. total receipts and 2. receipts added to website
-    immInfo["receipt_number"] = [immInfo["receipt_number"]]
-    immInfo["added_receipts"] = []
-
-    return immInfo
 
 
 def updateInfo(immInfo, element, updated):
@@ -141,47 +113,64 @@ def addReceiptNumber(immInfo, receipt_number):
     immInfo["receipt_number"].append(receipt_number)
 
 
-def PDF_Setup():
-    cwd = os.getcwd()
-    profiles = {}
-    for (dirpath, dirnames, filenames) in os.walk(cwd):
-        for filename in filenames:
-            if filename.endswith('.pdf'):
-                immInfo = extractPDFinfo(filename)
-                profiles[immInfo["firstName"] + immInfo["lastName"]] = immInfo
-
-
-    for immigrant in profiles:
-        setupUSCIS(immigrant)
-        immInfo["caseStatus"] = updateCases(immigrant)
-
-
-
-def location():
-    driver = webdriver.Safari()
-    driver.get('https://locator.ice.gov/odls/#/index')
-    time.sleep(4)
-    a_ID = driver.find_element_by_id("alienNumber")
-    a_ID.send_keys("123456789")
-    time.sleep(5)
-    country = Select(driver.find_element_by_id("alien_Search_Country"))
-    for option in country.options:
-        print(option)
-        if option.text == "Mexico":
-            option.click()
-    math = driver.find_element_by_name("equationAnswer")
-    checkAnswer = driver.find_element_by_id("submit-button")
-    while check_exists_by_name(driver, "equationAnswer") == True:
-        math.send_keys("10")
-        time.sleep(5)
-        checkAnswer.click()
-
-
-def check_exists_by_name(driver, name):
-    try:
-        driver.find_element_by_name(name)
-    except NoSuchElementException:
-        return False
-    return True
-
-
+#UNIMPLEMENTED PDF READER:
+#
+#def PDF_Setup():
+#    cwd = os.getcwd()
+#    profiles = {}
+#    for (dirpath, dirnames, filenames) in os.walk(cwd):
+#        for filename in filenames:
+#            if filename.endswith('.pdf'):
+#                immInfo = extractPDFinfo(filename)
+#                profiles[immInfo["firstName"] + immInfo["lastName"]] = immInfo
+#
+#
+#    for immigrant in profiles:
+#        setupUSCIS(immigrant)
+#        immInfo["caseStatus"] = updateCases(immigrant)
+#
+#def extractPDFinfo(filename):
+#    file = PdfFileReader(filename, strict=False)
+#    immInfo = file.getFormTextFields()
+#
+#    #creates a random user-password generator
+#    immInfo["username"] = randomStringDigits()
+#    immInfo["password"] = randomStringDigits()
+#
+#    #two lists of 1. total receipts and 2. receipts added to website
+#    immInfo["receipt_number"] = [immInfo["receipt_number"]]
+#    immInfo["added_receipts"] = []
+#
+#    return immInfo
+#
+#
+##UNIMPLEMENTED AUTOMATIC DETENTION CENTER LOCATOR:
+#
+#def location():
+#    driver = webdriver.Safari()
+#    driver.get('https://locator.ice.gov/odls/#/index')
+#    time.sleep(4)
+#    a_ID = driver.find_element_by_id("alienNumber")
+#    a_ID.send_keys("123456789")
+#    time.sleep(5)
+#    country = Select(driver.find_element_by_id("alien_Search_Country"))
+#    for option in country.options:
+#        print(option)
+#        if option.text == "Mexico":
+#            option.click()
+#    math = driver.find_element_by_name("equationAnswer")
+#    checkAnswer = driver.find_element_by_id("submit-button")
+#    while check_exists_by_name(driver, "equationAnswer") == True:
+#        math.send_keys("10")
+#        time.sleep(5)
+#        checkAnswer.click()
+#
+#
+#def check_exists_by_name(driver, name):
+#    try:
+#        driver.find_element_by_name(name)
+#    except NoSuchElementException:
+#        return False
+#    return True
+#
+#
