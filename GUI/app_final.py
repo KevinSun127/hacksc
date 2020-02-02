@@ -150,28 +150,48 @@ def deleteProfile(button):
     resetTextBoxes()
 
 
-####LOGIN PAGE
+color_order = ("GreenYellow", "Chartreuse",
+               "LawnGreen","Lime", "PaleGreen", "LimeGreen", "LightGreen",
+               "MediumSpringGreen", "SpringGreen", "Aquamarine", "Aqua",
+               "Cyan", "PaleTurquoise", "Turquoise", "MediumTurquoise",
+               "DarkTurquoise", "LightSkyBlue", "DeepSkyBlue")
+
+#colors in the background for each tab
+def colorization(num, alpha):
+    app.startFrame("Pixels"+str(num), row=0, column=0, colspan=5, rowspan=10)
+    for i in range(1, 19):
+        app.addLabel(alpha+str(i), text="", row=(i-1)//6, column=i%6)
+    for i in range(1, 19):
+        app.setLabelBg(alpha+str(i), color_order[i-1])
+    app.stopFrame()
+
+
 with gui("Profile", "1200x600") as app:
     app.startTabbedFrame("USCIS App")
     app.setTabbedFrameDisableAllTabs("USCIS App")
-
-
-
-
-
+    app.setFont(24)
+    
+    #Login Page
     app.startTab("Login")
-    app.label("username", "Username", sticky="ew")
-    app.entry("username", pos=('p', 1), focus=True)
-    app.label("password", "Password")
-    app.entry("password", pos=('p', 1), secret=True)
-    app.addButton("Login", login)
+    app.addLabel("title", "Welcome to USCIS Assistant")
+    colorization(1, "l")
+    app.startFrame("loginInfo")
+    app.setLabelBg("title", "White")
+    app.label("username", "Username", row=0, column=1)
+    app.setLabelBg("username", "White")
+    app.entry("username", pos=('p', 1), row=0, column=2)
+    app.setEntryDefault("username", "Username")
+    app.label("password", "Password", row=1, column=1)
+    app.setLabelBg("password", "White")
+    app.entry("password", pos=('p', 1), secret=True, row=1, column=2)
+    app.setEntryDefault("password", "Password")
+    app.raiseFrame("loginInfo")
+    app.stopFrame()
     app.stopTab()
-
-###LOGINPAGE
 
     #new Profile tab
     app.startTab("New Profile")
-
+    colorization(2, "b")
     #sets up text-fields (different types for different variables)
     for info in personalInfo:
         if info not in ("zipCode", "phone", "language"):
@@ -189,6 +209,8 @@ with gui("Profile", "1200x600") as app:
 
     #new Contact Info Tab
     app.startTab("Contact Information")
+    colorization(3, "c")
+
     app.setFont(20)
     app.addTable("g1", [["Last Name", "First Name", "City", "State",
      "Country", "Zip Code", "Email", "Phone", "Language"]])
@@ -196,13 +218,14 @@ with gui("Profile", "1200x600") as app:
 
     #new tab: displays the case filing status
     app.startTab("Case Status")
+    colorization(4, "d")
     app.addTable("g2", [["Last Name", "First Name", "A-ID", "Receipt Number",
     "Case Status"]])
     app.stopTab()
 
     #account creation tab
     app.startTab("Create New Account")
-
+    colorization(5, "e")
     for info in legalInfo:
         if info == "case_status":
             continue
@@ -214,13 +237,16 @@ with gui("Profile", "1200x600") as app:
         else:
             app.addEntry(info)
             app.setEntryDefault(info, questionsAnswers[info])
-
     app.addButton("Submit", create_account)
     app.stopTab()
 
     #account deletion tab
     app.startTab("Delete Profile")
+
+
+
     app.addEntry("LastName")
+    colorization(6, "f")
     app.setEntryDefault("LastName", "Last Name")
     app.addEntry("FirstName")
     app.setEntryDefault("FirstName", "First Name")
