@@ -1,2 +1,0 @@
-Fun games!
-Minesweeper, snake. 
